@@ -1,57 +1,48 @@
-#[derive(Debug, thiserror::Error)]
-pub enum DayOneError {
-    #[error(transparent)]
-    Read(#[from] std::io::Error),
-
-    #[error(transparent)]
-    Parse(#[from] core::num::ParseIntError),
-    // You can also get overflow
-}
-
 struct DayOne {
-    calories: Vec<u32>,
+    cal: Vec<u32>,
 }
 
 impl DayOne {
-    fn from_file(path: &str) -> Result<Self, DayOneError> {
-        let path = std::path::PathBuf::from(path);
-        let mut file = std::fs::File::open(path)?;
-        let mut data = String::new();
-        let _ = std::io::Read::read_to_string(&mut file, &mut data)?;
+    fn from_file(path: &str) -> Self {
+        let data = {
+            let mut file = std::fs::File::open(path).unwrap();
+            let mut data = String::new();
+            let _ = std::io::Read::read_to_string(&mut file, &mut data).unwrap();
+            data
+        };
 
-        let mut calories = Vec::new();
-        let mut init = 0;
+        let cal: Vec<u32> = data
+            .split("\n\n")
+            .map(|elf| {
+                elf.lines().fold(0, |acc, cal| {
+                    cal.parse::<u32>().unwrap().checked_add(acc).unwrap()
+                })
+            })
+            .collect();
 
-        for line in data.split('\n') {
-            if line.is_empty() {
-                calories.push(init);
-                init = 0;
-            } else {
-                init += line.parse::<u32>()?;
-            }
-        }
-
-        Ok(Self { calories })
+        Self { cal }
     }
 
-    fn sum_first_n(&self, len: usize) -> u32 {
-        let mut cal = self.calories.clone();
-        cal.sort_by(|a, b| b.cmp(a));
-        cal.truncate(len);
-        cal.iter().sum()
+    fn desc_cum_sum(&self, len: usize) -> u32 {
+        {
+            let mut cal: Vec<u32> = self.cal.clone();
+            cal.sort_by(|a, b| b.cmp(a));
+            cal.truncate(len);
+            cal
+        }
+        .iter()
+        .sum()
     }
 }
 
-fn main() -> Result<(), DayOneError> {
-    let day_one = DayOne::from_file("../input")?;
+fn main() {
+    let day_one = DayOne::from_file("../input");
 
-    let part_one = day_one.sum_first_n(1);
-    println!("Part One answer is: {}.", part_one);
+    let part_one = day_one.desc_cum_sum(1);
+    println!("Part One answer is: {} calories.", part_one);
     assert_eq!(part_one, 72070);
 
-    let part_two = day_one.sum_first_n(3);
-    println!("Part Two answer is: {}.", part_two);
+    let part_two = day_one.desc_cum_sum(3);
+    println!("Part Two answer is: {} calories.", part_two);
     assert_eq!(part_two, 211805);
-
-    Ok(())
 }
