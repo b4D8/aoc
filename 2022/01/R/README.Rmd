@@ -1,0 +1,76 @@
+---
+title: "Day 1: Calorie Counting"
+date: "2022-12-01"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data
+
+```{r}
+input <- readLines("../input")
+input <- as.integer(input)
+head(input, 13)
+
+elements <- length(input)
+elf <- c(1, which(is.na(input)))
+item <- which(!is.na(input))
+```
+
+We get this collection of `r elements` elements:
+
+* `r length(item)` integers that represent calories contained in food items that are carried around by elves
+* `r length(elf) - 1` missing values that delimit food distribution between `r length(elf)` elves.
+
+The goal of the puzzle is to find the elf carrying the most calories.
+
+So we need to sum all calories contained in the food items carried by each elf.
+
+## Food distribution
+
+```{r}
+shift <- c(elf[-1], elements)
+dist <- abs(elf - shift)
+summary(dist)
+```
+
+## Calorie distribution
+
+There is a total of `r prettyNum(sum(input[item]), big.mark= " ")` calories.
+
+```{r}
+winner <- 0
+payload <- sapply(seq_along(elf), function(i) {
+  first <- elf[i] + 1
+  last <- elf[i + 1]
+  last <- ifelse(is.na(last), elements, last - 1)
+  payload <- sum(input[first:last])
+
+  if (payload > winner) {
+    winner <<- payload
+    names(winner) <<- i
+  }
+
+  payload
+})
+
+summary(payload)
+```
+
+## Part One
+
+The elf carrying the most calories is at index `r names(winner)`.
+He is carrying **`r prettyNum(winner, big.mark = " ")` calories**.
+
+## Part Two
+
+```{r}
+n <- 3
+payload <- sort(payload, decreasing = TRUE)
+answer <- sum(payload[1:n])
+```
+
+The `r n` elves carrying the most calories are carrying **`r prettyNum(answer, big.mark = " ")` calories**.
