@@ -36,13 +36,13 @@ impl DayOne {
 }
 
 fn main() {
-    let day_one = DayOne::from_file("../input");
+    let day = DayOne::from_file("../input");
 
-    let part_one = day_one.desc_cum_sum(1);
+    let part_one = day.desc_cum_sum(1);
     println!("Part One answer is: {} calories.", part_one);
     assert_eq!(part_one, 72070);
 
-    let part_two = day_one.desc_cum_sum(3);
+    let part_two = day.desc_cum_sum(3);
     println!("Part Two answer is: {} calories.", part_two);
     assert_eq!(part_two, 211805);
 }
