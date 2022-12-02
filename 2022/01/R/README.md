@@ -5,79 +5,65 @@ Day 1: Calorie Counting
 ## Data
 
 ``` r
-input <- readLines("../input")
-input <- as.integer(input)
-head(input, 13)
+file <- "../input"
+data <- readLines(file)
+data <- as.integer(data)
+head(data, 13)
 ```
 
     ##  [1] 3264 4043 2537 3319 2485 3218 5611 1753 7232 3265 1751 2233   NA
 
 ``` r
-elements <- length(input)
-elf <- c(1, which(is.na(input)))
-item <- which(!is.na(input))
+elf <- c(1, which(is.na(data)))
+cal <- which(!is.na(data))
 ```
 
-We get this collection of 2269 elements:
-
-- 2004 integers that represent calories contained in food items that are
-  carried around by elves
-- 265 missing values that delimit food distribution between 266 elves.
-
-The goal of the puzzle is to find the elf carrying the most calories.
-
-So we need to sum all calories contained in the food items carried by
-each elf.
-
-## Food distribution
-
-``` r
-shift <- c(elf[-1], elements)
-dist <- abs(elf - shift)
-summary(dist)
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   2.000   5.000   8.000   8.526  12.750  16.000
-
-## Calorie distribution
-
-There is a total of 12 054 292 calories.
-
-``` r
-winner <- 0
-payload <- sapply(seq_along(elf), function(i) {
-  first <- elf[i] + 1
-  last <- elf[i + 1]
-  last <- ifelse(is.na(last), elements, last - 1)
-  payload <- sum(input[first:last])
-
-  if (payload > winner) {
-    winner <<- payload
-    names(winner) <<- i
-  }
-
-  payload
-})
-
-summary(payload)
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##    2366   39598   47235   45305   54171   72070
+266 elves are carrying 2004 calories.
 
 ## Part One
 
-The elf carrying the most calories is at index 40. He is carrying **72
-070 calories**.
+We need to find the number of calories carried by the most loaded elf.
+
+``` r
+part_one <- 0
+cal_per_elf <- sapply(seq_along(elf), function(i) {
+  first <- elf[i] + 1
+  last <- elf[i + 1]
+  last <- ifelse(is.na(last), length(data), last - 1)
+  cal_per_elf <- sum(data[first:last])
+  if (cal_per_elf > part_one) {
+    part_one <<- cal_per_elf
+  }
+  cal_per_elf
+})
+```
+
+Answer is: 72070.
 
 ## Part Two
 
+We need to find the number of calories carried by the 3 most loaded
+elves.
+
 ``` r
 n <- 3
-payload <- sort(payload, decreasing = TRUE)
-answer <- sum(payload[1:n])
+cal_per_elf <- sort(cal_per_elf, decreasing = TRUE)
+part_two <- sum(cal_per_elf[1:n])
 ```
 
-The 3 elves carrying the most calories are carrying **211 805
-calories**.
+Answer is: 211805.
+
+## Refactor
+
+``` r
+desc_cum_sum <- function(file, n = 1) {
+  cal <- scan(file, blank.lines.skip = FALSE, quiet = TRUE)
+  elf <- cumsum(is.na(cal))
+  cal_per_elf <- rowsum(cal, elf, na.rm = TRUE) |>
+    sort(decreasing = TRUE)
+  sum(cal_per_elf[1:n])
+}
+
+part_one <- desc_cum_sum(file)
+part_two <- desc_cum_sum(file, 3)
+```

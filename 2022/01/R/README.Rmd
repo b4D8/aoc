@@ -11,66 +11,70 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Data
 
 ```{r}
-input <- readLines("../input")
-input <- as.integer(input)
-head(input, 13)
+file <- "../input"
+data <- readLines(file)
+data <- as.integer(data)
+head(data, 13)
 
-elements <- length(input)
-elf <- c(1, which(is.na(input)))
-item <- which(!is.na(input))
+elf <- c(1, which(is.na(data)))
+cal <- which(!is.na(data))
 ```
 
-We get this collection of `r elements` elements:
-
-* `r length(item)` integers that represent calories contained in food items that are carried around by elves
-* `r length(elf) - 1` missing values that delimit food distribution between `r length(elf)` elves.
-
-The goal of the puzzle is to find the elf carrying the most calories.
-
-So we need to sum all calories contained in the food items carried by each elf.
-
-## Food distribution
-
-```{r}
-shift <- c(elf[-1], elements)
-dist <- abs(elf - shift)
-summary(dist)
-```
-
-## Calorie distribution
-
-There is a total of `r prettyNum(sum(input[item]), big.mark= " ")` calories.
-
-```{r}
-winner <- 0
-payload <- sapply(seq_along(elf), function(i) {
-  first <- elf[i] + 1
-  last <- elf[i + 1]
-  last <- ifelse(is.na(last), elements, last - 1)
-  payload <- sum(input[first:last])
-
-  if (payload > winner) {
-    winner <<- payload
-    names(winner) <<- i
-  }
-
-  payload
-})
-
-summary(payload)
-```
+`r length(elf)` elves are carrying `r length(cal)` calories.
 
 ## Part One
 
-The elf carrying the most calories is at index `r names(winner)`.
-He is carrying **`r prettyNum(winner, big.mark = " ")` calories**.
+We need to find the number of calories carried by the most loaded elf.
+
+```{r}
+part_one <- 0
+cal_per_elf <- sapply(seq_along(elf), function(i) {
+  first <- elf[i] + 1
+  last <- elf[i + 1]
+  last <- ifelse(is.na(last), length(data), last - 1)
+  cal_per_elf <- sum(data[first:last])
+  if (cal_per_elf > part_one) {
+    part_one <<- cal_per_elf
+  }
+  cal_per_elf
+})
+```
+
+Answer is: `r part_one`.
 
 ## Part Two
 
+We need to find the number of calories carried by the 3 most loaded elves.
+
 ```{r}
 n <- 3
-payload <- sort(payload, decreasing = TRUE)
-answer <- sum(payload[1:n])
+cal_per_elf <- sort(cal_per_elf, decreasing = TRUE)
+part_two <- sum(cal_per_elf[1:n])
 ```
 
-The `r n` elves carrying the most calories are carrying **`r prettyNum(answer, big.mark = " ")` calories**.
+Answer is: `r part_two`.
+
+```{r, echo = FALSE}
+testthat::expect_equal(part_one, 72070)
+testthat::expect_equal(part_two, 211805)
+```
+
+## Refactor
+
+```{r}
+desc_cum_sum <- function(file, n = 1) {
+  cal <- scan(file, blank.lines.skip = FALSE, quiet = TRUE)
+  elf <- cumsum(is.na(cal))
+  cal_per_elf <- rowsum(cal, elf, na.rm = TRUE) |>
+    sort(decreasing = TRUE)
+  sum(cal_per_elf[1:n])
+}
+
+part_one <- desc_cum_sum(file)
+part_two <- desc_cum_sum(file, 3)
+```
+
+```{r, echo = FALSE}
+testthat::expect_equal(part_one, 72070)
+testthat::expect_equal(part_two, 211805)
+```

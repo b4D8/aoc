@@ -1,9 +1,9 @@
 #[derive(Debug, thiserror::Error)]
 pub enum DayTwoError {
-    #[error("Failed to parse shape: {0}")]
+    #[error("Failed to parse shape: {0}.")]
     Shape(String),
 
-    #[error("Exactly 2 shapes are required")]
+    #[error("Failed to get 2 shapes from: {0}.")]
     Game(String),
 }
 
@@ -137,10 +137,10 @@ fn main() {
     let day = DayTwo::from_file("../input");
 
     let part_one = day.play();
-    println!("Part One answer is: {} points.", part_one);
+    println!("Part One answer is: {}.", part_one);
     assert_eq!(part_one, 13009);
 
     let part_two = day.play_again();
-    println!("Part Two answer is: {} points.", part_two);
+    println!("Part Two answer is: {}.", part_two);
     assert_eq!(part_two, 10398);
 }
