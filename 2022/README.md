@@ -5,7 +5,8 @@
   - [x] [rust](./01/rust/src/main.rs)
 - [x] [Day 2 - Rock Paper Scissors](./02)
   - [x] [rust](./02/rust/src/main.rs)
-- [ ] Day 3
+- [ ] [Day 3 - Rucksack Reorganization](/.03)
+  - [x] [rust](./03/rust/src/main.rs)
 - [ ] Day 4
 - [ ] Day 5
 - [ ] Day 6

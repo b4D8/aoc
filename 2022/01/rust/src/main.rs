@@ -1,31 +1,13 @@
-struct DayOne {
-    cal: Vec<u32>,
+use utils::Puzzle;
+
+struct Day1 {
+    cal: Vec<usize>,
 }
 
-impl DayOne {
-    fn from_file(path: &str) -> Self {
-        let data = {
-            let mut file = std::fs::File::open(path).unwrap();
-            let mut data = String::new();
-            let _ = std::io::Read::read_to_string(&mut file, &mut data).unwrap();
-            data
-        };
-
-        let cal: Vec<u32> = data
-            .split("\n\n")
-            .map(|elf| {
-                elf.lines().fold(0, |acc, cal| {
-                    cal.parse::<u32>().unwrap().checked_add(acc).unwrap()
-                })
-            })
-            .collect();
-
-        Self { cal }
-    }
-
-    fn desc_cum_sum(&self, len: usize) -> u32 {
+impl Day1 {
+    fn desc_cum_sum(&self, len: usize) -> usize {
         {
-            let mut cal: Vec<u32> = self.cal.clone();
+            let mut cal: Vec<usize> = self.cal.clone();
             cal.sort_by(|a, b| b.cmp(a));
             cal.truncate(len);
             cal
@@ -35,14 +17,37 @@ impl DayOne {
     }
 }
 
+impl Puzzle for Day1 {
+    fn from_string(s: String) -> Self {
+        let cal: Vec<usize> = s
+            .split("\n\n")
+            .map(|elf| {
+                elf.lines().fold(0, |acc, cal| {
+                    cal.parse::<usize>().unwrap().checked_add(acc).unwrap()
+                })
+            })
+            .collect();
+
+        Self { cal }
+    }
+
+    fn solve1(&self) -> usize {
+        self.desc_cum_sum(1)
+    }
+
+    fn solve2(&self) -> usize {
+        self.desc_cum_sum(3)
+    }
+}
+
 fn main() {
-    let day = DayOne::from_file("../input");
+    let puzzle = Day1::from_file();
 
-    let part_one = day.desc_cum_sum(1);
-    println!("Part One answer is: {} calories.", part_one);
-    assert_eq!(part_one, 72070);
+    let part1 = puzzle.solve1();
+    println!("Part 1: answer is {}.", part1);
+    assert_eq!(part1, 72070);
 
-    let part_two = day.desc_cum_sum(3);
-    println!("Part Two answer is: {} calories.", part_two);
-    assert_eq!(part_two, 211805);
+    let part2 = puzzle.solve2();
+    println!("Part 2: answer is {}.", part2);
+    assert_eq!(part2, 211805);
 }

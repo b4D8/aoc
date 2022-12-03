@@ -1,3 +1,5 @@
+use utils::Puzzle;
+
 #[derive(Debug, thiserror::Error)]
 pub enum DayTwoError {
     #[error("Failed to parse shape: {0}.")]
@@ -7,12 +9,25 @@ pub enum DayTwoError {
     Game(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 #[repr(usize)]
 enum Shape {
     Rock = 1,
     Paper = 2,
     Scissor = 3,
+}
+
+impl TryFrom<usize> for Shape {
+    type Error = DayTwoError;
+
+    fn try_from(u: usize) -> Result<Self, Self::Error> {
+        match u {
+            1 => Ok(Self::Rock),
+            2 => Ok(Self::Paper),
+            3 => Ok(Self::Scissor),
+            _ => Err(DayTwoError::Shape(u.to_string())),
+        }
+    }
 }
 
 impl std::str::FromStr for Shape {
@@ -28,6 +43,22 @@ impl std::str::FromStr for Shape {
     }
 }
 
+impl std::ops::Add for &Shape {
+    type Output = usize;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        *self as usize + *rhs as usize
+    }
+}
+
+impl std::ops::Add<&Outcome> for &Shape {
+    type Output = usize;
+
+    fn add(self, rhs: &Outcome) -> Self::Output {
+        *self as usize + *rhs as usize
+    }
+}
+
 impl From<&Shape> for Outcome {
     fn from(shape: &Shape) -> Self {
         match shape {
@@ -38,7 +69,7 @@ impl From<&Shape> for Outcome {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[repr(usize)]
 enum Outcome {
     Loss = 0,
@@ -57,31 +88,29 @@ impl Game {
         Self { predict, reco }
     }
 
-    fn play(&self) -> usize {
-        let score = match (&self.predict, &self.reco) {
-            (Shape::Rock, Shape::Scissor) => Outcome::Loss,
-            (Shape::Rock, Shape::Paper) => Outcome::Win,
-            (Shape::Scissor, Shape::Paper) => Outcome::Loss,
-            (Shape::Scissor, Shape::Rock) => Outcome::Win,
-            (Shape::Paper, Shape::Rock) => Outcome::Loss,
-            (Shape::Paper, Shape::Scissor) => Outcome::Win,
-            _ => Outcome::Draw,
-        };
-        self.reco.clone() as usize + score as usize
+    fn play_reco(&self) -> usize {
+        match (&self.predict, &self.reco) {
+            (Shape::Rock, Shape::Scissor) => &self.reco + &Outcome::Loss,
+            (Shape::Rock, Shape::Paper) => &self.reco + &Outcome::Win,
+            (Shape::Scissor, Shape::Paper) => &self.reco + &Outcome::Loss,
+            (Shape::Scissor, Shape::Rock) => &self.reco + &Outcome::Win,
+            (Shape::Paper, Shape::Rock) => &self.reco + &Outcome::Loss,
+            (Shape::Paper, Shape::Scissor) => &self.reco + &Outcome::Win,
+            _ => &self.reco + &Outcome::Draw,
+        }
     }
 
-    fn play_again(&self) -> usize {
+    fn play_outcome(&self) -> usize {
         let score = Outcome::from(&self.reco);
-        let reco = match (&self.predict, &score) {
-            (Shape::Rock, Outcome::Loss) => Shape::Scissor,
-            (Shape::Rock, Outcome::Win) => Shape::Paper,
-            (Shape::Paper, Outcome::Loss) => Shape::Rock,
-            (Shape::Paper, Outcome::Win) => Shape::Scissor,
-            (Shape::Scissor, Outcome::Loss) => Shape::Paper,
-            (Shape::Scissor, Outcome::Win) => Shape::Rock,
-            (other, Outcome::Draw) => other.clone(),
-        };
-        reco as usize + score as usize
+        match (&self.predict, &score) {
+            (reco, Outcome::Draw) => reco + &score,
+            (Shape::Rock, Outcome::Loss) => &Shape::Scissor + &score,
+            (Shape::Rock, _) => &Shape::Paper + &score,
+            (Shape::Paper, Outcome::Loss) => &Shape::Rock + &score,
+            (Shape::Paper, _) => &Shape::Scissor + &score,
+            (Shape::Scissor, Outcome::Loss) => &Shape::Paper + &score,
+            (Shape::Scissor, _) => &Shape::Rock + &score,
+        }
     }
 }
 
@@ -101,20 +130,13 @@ impl std::str::FromStr for Game {
 }
 
 #[derive(Debug)]
-struct DayTwo {
+struct Day2 {
     games: Vec<Game>,
 }
 
-impl DayTwo {
-    fn from_file(path: &str) -> Self {
-        let data = {
-            let mut file = std::fs::File::open(path).unwrap();
-            let mut data = String::new();
-            let _ = std::io::Read::read_to_string(&mut file, &mut data).unwrap();
-            data
-        };
-
-        let games: Vec<Game> = data
+impl Puzzle for Day2 {
+    fn from_string(s: String) -> Self {
+        let games: Vec<Game> = s
             .lines()
             .map(|line| line.parse::<Game>().unwrap())
             .collect();
@@ -122,25 +144,27 @@ impl DayTwo {
         Self { games }
     }
 
-    fn play(&self) -> usize {
-        self.games.iter().fold(0, |acc, game| acc + game.play())
-    }
-
-    fn play_again(&self) -> usize {
+    fn solve1(&self) -> usize {
         self.games
             .iter()
-            .fold(0, |acc, game| acc + game.play_again())
+            .fold(0, |acc, game| acc + game.play_reco())
+    }
+
+    fn solve2(&self) -> usize {
+        self.games
+            .iter()
+            .fold(0, |acc, game| acc + game.play_outcome())
     }
 }
 
 fn main() {
-    let day = DayTwo::from_file("../input");
+    let puzzle = Day2::from_file();
 
-    let part_one = day.play();
-    println!("Part One answer is: {}.", part_one);
-    assert_eq!(part_one, 13009);
+    let part1 = puzzle.solve1();
+    println!("Part 1: answer is {}.", part1);
+    assert_eq!(part1, 13009);
 
-    let part_two = day.play_again();
-    println!("Part Two answer is: {}.", part_two);
-    assert_eq!(part_two, 10398);
+    let part2 = puzzle.solve2();
+    println!("Part 2: answer is {}.", part2);
+    assert_eq!(part2, 10398);
 }

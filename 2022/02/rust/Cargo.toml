@@ -1,7 +1,8 @@
 [package]
-name = "day1"
+name = "day2"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 thiserror = "1.0.37"
+utils = { path = "../../../utils" }
