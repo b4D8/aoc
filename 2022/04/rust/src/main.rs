@@ -45,7 +45,7 @@ impl std::str::FromStr for Pair {
 }
 
 impl Pair {
-    fn has_contained(&self) -> bool {
+    fn has_full_overlap(&self) -> bool {
         self.0.contains(&self.1) || self.1.contains(&self.0)
     }
 
@@ -68,7 +68,7 @@ impl Puzzle for Day4 {
     }
 
     fn solve1(&self) -> usize {
-        self.0.iter().filter(|pair| pair.has_contained()).count()
+        self.0.iter().filter(|pair| pair.has_full_overlap()).count()
     }
 
     fn solve2(&self) -> usize {
