@@ -80,30 +80,30 @@ enum Outcome {
 #[derive(Debug)]
 struct Game {
     predict: Shape,
-    reco: Shape,
+    strategy: Shape,
 }
 
 impl Game {
-    fn new(predict: Shape, reco: Shape) -> Self {
-        Self { predict, reco }
+    fn new(predict: Shape, strategy: Shape) -> Self {
+        Self { predict, strategy }
     }
 
-    fn play_reco(&self) -> usize {
-        match (&self.predict, &self.reco) {
-            (Shape::Rock, Shape::Scissor) => &self.reco + &Outcome::Loss,
-            (Shape::Rock, Shape::Paper) => &self.reco + &Outcome::Win,
-            (Shape::Scissor, Shape::Paper) => &self.reco + &Outcome::Loss,
-            (Shape::Scissor, Shape::Rock) => &self.reco + &Outcome::Win,
-            (Shape::Paper, Shape::Rock) => &self.reco + &Outcome::Loss,
-            (Shape::Paper, Shape::Scissor) => &self.reco + &Outcome::Win,
-            _ => &self.reco + &Outcome::Draw,
+    fn play_strategy(&self) -> usize {
+        match (&self.predict, &self.strategy) {
+            (Shape::Rock, Shape::Scissor) => &self.strategy + &Outcome::Loss,
+            (Shape::Rock, Shape::Paper) => &self.strategy + &Outcome::Win,
+            (Shape::Scissor, Shape::Paper) => &self.strategy + &Outcome::Loss,
+            (Shape::Scissor, Shape::Rock) => &self.strategy + &Outcome::Win,
+            (Shape::Paper, Shape::Rock) => &self.strategy + &Outcome::Loss,
+            (Shape::Paper, Shape::Scissor) => &self.strategy + &Outcome::Win,
+            _ => &self.strategy + &Outcome::Draw,
         }
     }
 
     fn play_outcome(&self) -> usize {
-        let score = Outcome::from(&self.reco);
+        let score = Outcome::from(&self.strategy);
         match (&self.predict, &score) {
-            (reco, Outcome::Draw) => reco + &score,
+            (strategy, Outcome::Draw) => strategy + &score,
             (Shape::Rock, Outcome::Loss) => &Shape::Scissor + &score,
             (Shape::Rock, _) => &Shape::Paper + &score,
             (Shape::Paper, Outcome::Loss) => &Shape::Rock + &score,
@@ -147,7 +147,7 @@ impl Puzzle for Day2 {
     fn solve1(&self) -> usize {
         self.games
             .iter()
-            .fold(0, |acc, game| acc + game.play_reco())
+            .fold(0, |acc, game| acc + game.play_strategy())
     }
 
     fn solve2(&self) -> usize {
