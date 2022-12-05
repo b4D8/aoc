@@ -75,16 +75,12 @@ impl Day5 {
         to.append(&mut block);
     }
 
-    fn top(&self) -> String {
+    fn first(&self) -> String {
         self.cargo
             .iter()
-            .filter_map(|stack| stack.last().map(|a| a.0))
+            .filter_map(|stack| stack.last().map(|c| c.0))
             .collect()
     }
-}
-
-fn parse_crate(input: &str) -> ParseResult<Crate> {
-    delimited(char('['), map(alpha1, Crate::new), char(']'))(input)
 }
 
 fn transpose<T>(mat: Vec<Vec<T>>) -> Vec<Vec<T>> {
@@ -100,7 +96,10 @@ fn parse_cargo(input: &str) -> ParseResult<Vec<Vec<Crate>>> {
         many1(terminated(
             many1(terminated(
                 alt((
-                    map(parse_crate, Slot::Full),
+                    map(
+                        delimited(char('['), map(alpha1, Crate::new), char(']')),
+                        Slot::Full,
+                    ),
                     map(many_m_n(3, 3, char(' ')), |_| Slot::Empty),
                 )),
                 opt(char(' ')),
@@ -169,7 +168,7 @@ impl Puzzle<String, String> for Day5 {
         while let Some(step) = ship.steps.pop() {
             ship.rearrange(step, Crane::Mover9000)
         }
-        ship.top()
+        ship.first()
     }
 
     fn solve2(&self) -> String {
@@ -177,7 +176,7 @@ impl Puzzle<String, String> for Day5 {
         while let Some(step) = ship.steps.pop() {
             ship.rearrange(step, Crane::Mover9001)
         }
-        ship.top()
+        ship.first()
     }
 }
 
