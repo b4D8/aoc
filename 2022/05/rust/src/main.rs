@@ -1,15 +1,24 @@
-use nom::Finish;
-use utils::Puzzle;
+use {
+    nom::{
+        branch::alt,
+        bytes::complete::tag,
+        character::complete::{alpha1, char, digit1, line_ending, space0, space1},
+        combinator::{all_consuming, map, map_res, opt},
+        multi::{many1, many_m_n},
+        sequence::{delimited, pair, terminated, tuple},
+        IResult,
+    },
+    utils::Puzzle,
+};
 
-type ParseResult<'a, T> = nom::IResult<&'a str, T, ()>;
+type ParseResult<'a, T> = IResult<&'a str, T, ()>;
 
 #[derive(Debug, Clone, PartialEq)]
-struct Crate(String);
+struct Crate(char);
 
 impl Crate {
-    #[cfg(test)]
     fn new(s: &str) -> Self {
-        Self(s.to_owned())
+        Self(s.chars().next().unwrap())
     }
 }
 
@@ -27,9 +36,28 @@ struct Step {
 }
 
 impl Step {
-    #[cfg(test)]
     fn new(n: usize, from: usize, to: usize) -> Self {
-        Self { n, from, to }
+        Self {
+            n,
+            from: from - 1,
+            to: to - 1,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+enum Crane {
+    Mover9000,
+    Mover9001,
+}
+
+impl Crane {
+    fn lift(&self, n: usize, from: &mut Vec<Crate>) -> Vec<Crate> {
+        let range = (from.len() - n)..;
+        match self {
+            Crane::Mover9000 => from.drain(range).rev().collect(),
+            Crane::Mover9001 => from.drain(range).collect(),
+        }
     }
 }
 
@@ -40,95 +68,77 @@ struct Day5 {
 }
 
 impl Day5 {
+    fn rearrange(&mut self, step: Step, crane: Crane) {
+        let from = self.cargo.get_mut(step.from).unwrap();
+        let mut block = crane.lift(step.n, from);
+        let to = self.cargo.get_mut(step.to).unwrap();
+        to.append(&mut block);
+    }
+
     fn top(&self) -> String {
         self.cargo
             .iter()
-            .filter_map(|stack| stack.last().map(|a| a.0.clone()))
-            .collect::<Vec<String>>()
-            .join("")
+            .filter_map(|stack| stack.last().map(|a| a.0))
+            .collect()
     }
 }
 
 fn parse_crate(input: &str) -> ParseResult<Crate> {
-    nom::sequence::delimited(
-        nom::bytes::complete::tag("["),
-        nom::combinator::map(nom::character::complete::alpha1, |s: &str| Crate(s.into())),
-        nom::bytes::complete::tag("]"),
-    )(input)
-}
-
-fn parse_slot(input: &str) -> ParseResult<Slot> {
-    nom::branch::alt((
-        nom::combinator::map(parse_crate, Slot::Full),
-        nom::combinator::map(
-            nom::multi::many_m_n(3, 3, nom::bytes::complete::tag(" ")),
-            |_| Slot::Empty,
-        ),
-    ))(input)
+    delimited(char('['), map(alpha1, Crate::new), char(']'))(input)
 }
 
 fn transpose<T>(mat: Vec<Vec<T>>) -> Vec<Vec<T>> {
-    let len = mat[0].len();
-    let mut cols: Vec<_> = mat.into_iter().map(|col| col.into_iter()).collect();
+    let len = mat.get(0).unwrap().len();
+    let mut iters: Vec<_> = mat.into_iter().map(|n| n.into_iter()).collect();
     (0..len)
-        .map(|_| {
-            cols.iter_mut()
-                .map(|col| col.next().unwrap())
-                .collect::<Vec<T>>()
-        })
+        .map(|_| -> Vec<T> { iters.iter_mut().map(|n| n.next().unwrap()).collect() })
         .collect()
 }
 
 fn parse_cargo(input: &str) -> ParseResult<Vec<Vec<Crate>>> {
-    nom::combinator::map(
-        nom::multi::many1(nom::sequence::terminated(
-            nom::multi::many1(nom::sequence::terminated(
-                parse_slot,
-                nom::combinator::opt(nom::bytes::complete::tag(" ")),
+    map(
+        many1(terminated(
+            many1(terminated(
+                alt((
+                    map(parse_crate, Slot::Full),
+                    map(many_m_n(3, 3, char(' ')), |_| Slot::Empty),
+                )),
+                opt(char(' ')),
             )),
-            nom::character::complete::line_ending,
+            line_ending,
         )),
         |mat| -> Vec<Vec<Crate>> {
             transpose(mat)
                 .into_iter()
                 .map(|col| -> Vec<Crate> {
-                    let mut col: Vec<Crate> = col
-                        .into_iter()
+                    col.into_iter()
                         .filter_map(|slot| match slot {
                             Slot::Empty => None,
                             Slot::Full(c) => Some(c),
                         })
-                        .collect();
-                    col.reverse();
-                    col
+                        .rev()
+                        .collect()
                 })
                 .collect()
         },
     )(input)
 }
 
-fn step_tag<'a>(tag: &'static str) -> impl FnMut(&'a str) -> ParseResult<usize> {
-    nom::combinator::map_res(
-        nom::sequence::delimited(
-            nom::sequence::pair(
-                nom::bytes::complete::tag(tag),
-                nom::character::complete::space1,
-            ),
-            nom::character::complete::digit1,
-            nom::character::complete::space0,
-        ),
+fn step_tag<'a>(t: &'static str) -> impl FnMut(&'a str) -> ParseResult<usize> {
+    map_res(
+        delimited(pair(tag(t), space1), digit1, space0),
         |val: &str| val.parse::<usize>(),
     )
 }
 
 fn parse_steps(input: &str) -> ParseResult<Vec<Step>> {
-    nom::combinator::map(
-        nom::multi::many1(nom::sequence::terminated(
-            nom::combinator::map(
-                nom::sequence::tuple((step_tag("move"), step_tag("from"), step_tag("to"))),
-                |(n, from, to)| Step { n, from, to },
+    map(
+        many1(terminated(
+            map(
+                tuple((step_tag("move"), step_tag("from"), step_tag("to"))),
+                |(n, from, to)| Step::new(n, from, to),
             ),
-            nom::character::complete::line_ending,
+            line_ending,
         )),
         |mut steps| {
             steps.reverse();
@@ -137,68 +147,37 @@ fn parse_steps(input: &str) -> ParseResult<Vec<Step>> {
     )(input)
 }
 
-fn parse_day5(input: &str) -> ParseResult<Day5> {
-    nom::combinator::map(
-        nom::sequence::tuple((
-            nom::sequence::delimited(
-                nom::combinator::opt(nom::character::complete::line_ending),
-                parse_cargo,
-                nom::multi::many1(nom::branch::alt((
-                    nom::character::complete::digit1,
-                    nom::character::complete::space1,
-                    nom::character::complete::line_ending,
-                ))),
-            ),
-            parse_steps,
-        )),
-        |(cargo, steps)| Day5 { cargo, steps },
-    )(input)
-}
-
-impl std::str::FromStr for Day5 {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (_, day) = nom::combinator::all_consuming(parse_day5)(s).finish()?;
-        Ok(day)
-    }
-}
-
 impl Puzzle<String, String> for Day5 {
     fn from_string(s: String) -> Self {
-        s.parse::<Day5>().unwrap()
+        all_consuming(map(
+            tuple((
+                delimited(
+                    opt(line_ending),
+                    parse_cargo,
+                    many1(alt((digit1, space1, line_ending))),
+                ),
+                parse_steps,
+            )),
+            |(cargo, steps)| Day5 { cargo, steps },
+        ))(&s)
+        .unwrap()
+        .1
     }
 
     fn solve1(&self) -> String {
-        {
-            let mut day = self.clone();
-            while let Some(step) = day.steps.pop() {
-                for _ in 0..step.n {
-                    let obj = day.cargo.get_mut(step.from - 1).unwrap().pop().unwrap();
-                    day.cargo.get_mut(step.to - 1).unwrap().push(obj)
-                }
-            }
-            day
+        let mut ship = self.clone();
+        while let Some(step) = ship.steps.pop() {
+            ship.rearrange(step, Crane::Mover9000)
         }
-        .top()
+        ship.top()
     }
 
     fn solve2(&self) -> String {
-        {
-            let mut day = self.clone();
-            while let Some(step) = day.steps.pop() {
-                let mut range = Vec::new();
-                for _ in 0..step.n {
-                    let obj = day.cargo.get_mut(step.from - 1).unwrap().pop().unwrap();
-                    range.push(obj);
-                }
-                while let Some(obj) = range.pop() {
-                    day.cargo.get_mut(step.to - 1).unwrap().push(obj)
-                }
-            }
-            day
+        let mut ship = self.clone();
+        while let Some(step) = ship.steps.pop() {
+            ship.rearrange(step, Crane::Mover9001)
         }
-        .top()
+        ship.top()
     }
 }
 
