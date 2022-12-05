@@ -1,6 +1,9 @@
 mod parser;
 use utils::Puzzle;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone, PartialEq)]
 struct Crate(char);
 
