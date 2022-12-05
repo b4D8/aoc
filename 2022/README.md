@@ -6,12 +6,10 @@ To supply enough magical energy, the expedition needs to retrieve a minimum of f
 
 Collect stars by solving puzzles. Two puzzles will be made available on each day in the Advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants **one star**. Good luck!
 
-***
-
 | Puzzle                                 | Solution                                          |
-|----------------------------------------|---------------------------------------------------|
+|:---------------------------------------|:--------------------------------------------------|
 | [Day 1: Calorie counting](./01)        | [R](./01/R), [rust](./01/rust/src/main.rs)        |
 | [Day 2: Rock Paper Scissors](./02)     | [rust](./02/rust/src/main.rs)                     |
 | [Day 3: Rucksack Reorganization](./03) | [R](./03/R/main.R), [rust](./03/rust/src/main.rs) |
 | [Day 4: Camp Cleanup](./04)            | [R](./04/R/main.R), [rust](./04/rust/src/main.rs) |
-
+| [Day 5: Supply Stacks](./05)           | [rust](./05/rust/src/main.rs)                     |

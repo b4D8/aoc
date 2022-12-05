@@ -1,1 +1,4 @@
 /target
+.Rproj.*
+*.Rproj
+.Rproj.user
