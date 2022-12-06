@@ -13,3 +13,4 @@ Collect stars by solving puzzles. Two puzzles will be made available on each day
 | [Day 3: Rucksack Reorganization](./03) | [R](./03/R/main.R), [rust](./03/rust/src/main.rs) |
 | [Day 4: Camp Cleanup](./04)            | [R](./04/R/main.R), [rust](./04/rust/src/main.rs) |
 | [Day 5: Supply Stacks](./05)           | [rust](./05/rust/src/main.rs)                     |
+| [Day 6: Tuning Trouble](./06)          | [rust](./06/rust/src/main.rs)                     |
