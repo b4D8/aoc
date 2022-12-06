@@ -8,8 +8,15 @@ struct Day6 {
     stream: Vec<char>,
 }
 
+#[repr(usize)]
+enum Kind {
+    Packet = 4,
+    Message = 14,
+}
+
 impl Day6 {
-    fn detect(&self, size: usize) -> usize {
+    fn detect(&self, kind: Kind) -> usize {
+        let size = kind as usize;
         self.stream
             .windows(size)
             .enumerate()
@@ -27,11 +34,11 @@ impl Puzzle for Day6 {
     }
 
     fn solve1(&self) -> usize {
-        self.detect(4)
+        self.detect(Kind::Packet)
     }
 
     fn solve2(&self) -> usize {
-        self.detect(14)
+        self.detect(Kind::Message)
     }
 }
 
