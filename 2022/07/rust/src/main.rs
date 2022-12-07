@@ -1,6 +1,4 @@
-use std::ops::AddAssign;
-
-use {std::collections::HashMap, utils::Puzzle};
+use {std::collections::HashMap, std::ops::AddAssign, utils::Puzzle};
 
 mod parser;
 
