@@ -35,25 +35,25 @@ impl Default for Path {
 
 impl Path {
     // Applies a "change directory" command in place
-    fn apply(&mut self, cd: Cd) {
-        match cd {
-            Cd::Top => *self = Self::default(),
-            Cd::In(dir) => self.0.push(dir),
-            Cd::Out => {
+    fn go_to(&mut self, dest: Dest) {
+        match dest {
+            Dest::Root => *self = Self::default(),
+            Dest::Forward(dir) => self.0.push(dir),
+            Dest::Backward => {
                 self.0.pop();
             }
         }
     }
 
-    // Returns all the paths from root ("/") to leaf
+    // Returns all the paths from root ("/") to leaf directory
     fn paths(&self) -> Vec<Self> {
-        let mut parents = Vec::new();
-        for i in 0..self.0.len() {
-            let mut path = self.0.clone();
-            path.truncate(i + 1);
-            parents.push(Self(path));
-        }
-        parents
+        (0..self.0.len())
+            .map(|i| {
+                let mut path = self.0.clone();
+                path.truncate(i + 1);
+                Self(path)
+            })
+            .collect()
     }
 }
 
@@ -78,21 +78,21 @@ enum Entry {
 }
 
 #[derive(Debug, Clone)]
-enum Cmd {
-    Ls(Vec<Entry>),
-    Cd(Cd),
+enum Command {
+    List(Vec<Entry>),
+    Change(Dest),
 }
 
 #[derive(Debug, Clone)]
-enum Cd {
-    In(Dir),
-    Out,
-    Top,
+enum Dest {
+    Root,
+    Forward(Dir),
+    Backward,
 }
 
 #[derive(Debug, Default, Clone)]
 struct Day7 {
-    cmd: Vec<Cmd>,
+    cmd: Vec<Command>,
 }
 
 #[derive(Debug, Default)]
@@ -106,47 +106,46 @@ impl FileSystem {
         Self { dirs }
     }
 
+    fn canonicalize(path: &Path, dir: Dir) -> String {
+        [path.to_string(), dir.name].join("")
+    }
+
     fn insert(&mut self, path: &Path, entry: Entry) {
         match entry {
-            Entry::File(file) => {
-                for dir in path.paths() {
-                    self.dirs
-                        .entry(dir.to_string())
-                        .and_modify(|s| s.add_assign(file.size))
-                        .or_insert(file.size);
-                }
-            }
             Entry::Dir(dir) => {
-                let dir = [path.to_string(), dir.name].join("");
-                self.dirs.insert(dir, 0);
+                self.dirs.insert(Self::canonicalize(path, dir), 0);
             }
+            Entry::File(file) => path.paths().into_iter().for_each(|dir| {
+                self.dirs
+                    .entry(dir.to_string())
+                    .and_modify(|s| s.add_assign(file.size))
+                    .or_insert(file.size);
+            }),
         }
     }
 
-    fn occupied_space(&self, limit: Option<usize>) -> usize {
+    fn occupied(&self, limit: Option<usize>) -> usize {
+        let dir_space = self.dirs.values();
         if let Some(limit) = limit {
-            self.dirs
-                .iter()
-                .filter_map(|(_, size)| (size <= &limit).then_some(size))
+            dir_space
+                .filter_map(|size| (size <= &limit).then_some(size))
                 .sum()
         } else {
-            *self.dirs.values().max().unwrap()
+            *dir_space.max().unwrap()
         }
     }
 }
 
 impl From<Day7> for FileSystem {
-    fn from(d: Day7) -> Self {
+    fn from(day: Day7) -> Self {
         let mut fs = Self::new();
         let mut path = Path::default();
-        for cmd in d.cmd {
-            match cmd {
-                Cmd::Cd(cd) => path.apply(cd),
-                Cmd::Ls(entries) => entries
-                    .into_iter()
-                    .for_each(|entry| fs.insert(&path, entry)),
-            }
-        }
+        day.cmd.into_iter().for_each(|cmd| match cmd {
+            Command::Change(dest) => path.go_to(dest),
+            Command::List(entries) => entries
+                .into_iter()
+                .for_each(|entry| fs.insert(&path, entry)),
+        });
         fs
     }
 }
@@ -157,12 +156,12 @@ impl Puzzle for Day7 {
     }
 
     fn solve1(&self) -> usize {
-        FileSystem::from(self.clone()).occupied_space(Some(100_000))
+        FileSystem::from(self.clone()).occupied(Some(100_000))
     }
 
     fn solve2(&self) -> usize {
         let fs: FileSystem = self.clone().into();
-        let occupied = fs.occupied_space(None);
+        let occupied = fs.occupied(None);
         let vacant = DISK_SPACE.checked_sub(occupied).unwrap();
         let needed = NEED_SPACE.checked_sub(vacant).unwrap();
         *fs.dirs

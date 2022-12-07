@@ -1,5 +1,5 @@
 use {
-    crate::{Cd, Cmd, Day7, Dir, Entry, File},
+    crate::{Command, Day7, Dest, Dir, Entry, File},
     nom::{
         branch::alt,
         bytes::complete::{tag, take_while1},
@@ -17,13 +17,13 @@ fn parse_dir_name(input: &str) -> ParseResult<Dir> {
     map(alpha1, |name: &str| Dir { name: name.into() })(input)
 }
 
-fn parse_cmd_cd(input: &str) -> ParseResult<Cmd> {
+fn parse_cmd_cd(input: &str) -> ParseResult<Command> {
     delimited(
         pair(tag("cd"), space1),
         alt((
-            map(tag("/"), |_| Cmd::Cd(Cd::Top)),
-            map(tag(".."), |_| Cmd::Cd(Cd::Out)),
-            map(parse_dir_name, |dir| Cmd::Cd(Cd::In(dir))),
+            map(tag("/"), |_| Command::Change(Dest::Root)),
+            map(tag(".."), |_| Command::Change(Dest::Backward)),
+            map(parse_dir_name, |dir| Command::Change(Dest::Forward(dir))),
         )),
         opt(newline),
     )(input)
@@ -58,17 +58,17 @@ fn parse_dir(input: &str) -> ParseResult<Entry> {
     )(input)
 }
 
-fn parse_cmd_ls(input: &str) -> ParseResult<Cmd> {
+fn parse_cmd_ls(input: &str) -> ParseResult<Command> {
     map(
         preceded(
             pair(tag("ls"), newline),
             separated_list0(newline, alt((parse_file, parse_dir))),
         ),
-        Cmd::Ls,
+        Command::List,
     )(input)
 }
 
-fn parse_cmd(input: &str) -> ParseResult<Cmd> {
+fn parse_cmd(input: &str) -> ParseResult<Command> {
     delimited(
         pair(tag("$"), space1),
         alt((parse_cmd_cd, parse_cmd_ls)),
