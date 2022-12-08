@@ -15,3 +15,4 @@ Collect stars by solving puzzles. Two puzzles will be made available on each day
 | [Day 5: Supply Stacks](./05/README.md)           | [rust](./05/rust/src/main.rs)                        |
 | [Day 6: Tuning Trouble](./06/README.md)          | [R](./06/R/main.R), [rust](./06/rust/src/main.rs)    |
 | [Day 7: No Space Left On Device](./07/README.md) | [rust](./07/rust/src/main.rs)                        |
+| [Day 8: Treetop Tree House](./08/README.md)      | [rust](./08/rust/src/main.rs)                        |
