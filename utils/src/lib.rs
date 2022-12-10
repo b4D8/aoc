@@ -1,10 +1,22 @@
+use std::fmt::Debug;
+use std::str::FromStr;
+pub mod grid;
+
 pub trait Puzzle<A = usize, B = usize> {
     const FILE: &'static str = "../input";
 
-    fn from_string(s: String) -> Self;
+    fn from_string(s: String) -> Self
+    where
+        Self: FromStr,
+        <Self as FromStr>::Err: Debug,
+    {
+        s.parse::<Self>().unwrap()
+    }
 
     fn from_file() -> Self
     where
+        Self: FromStr,
+        <Self as FromStr>::Err: Debug,
         Self: Sized,
     {
         let data = {
