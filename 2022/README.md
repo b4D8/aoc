@@ -16,3 +16,5 @@ Collect stars by solving puzzles. Two puzzles will be made available on each day
 | [Day 6: Tuning Trouble](./06/README.md)          | [R](./06/R/main.R), [rust](./06/rust/src/main.rs)    |
 | [Day 7: No Space Left On Device](./07/README.md) | [rust](./07/rust/src/main.rs)                        |
 | [Day 8: Treetop Tree House](./08/README.md)      | [rust](./08/rust/src/main.rs)                        |
+| [Day 9:  Rope Bridge](./09/README.md)            | [rust](./09/rust/src/main.rs)                        |
+| [Day 10: Cathode-Ray Tube](./10/README.md)       | [rust](./10/rust/src/main.rs)                        |

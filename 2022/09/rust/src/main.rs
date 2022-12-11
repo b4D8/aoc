@@ -1,7 +1,4 @@
-use {
-    utils::grid::{Direction, Point, SparseGrid, Step},
-    utils::Puzzle,
-};
+use utils::{Direction, Point, Puzzle, SparseGrid, Step};
 
 #[cfg(test)]
 mod tests;
@@ -37,6 +34,8 @@ impl Day9 {
     fn trace(&self, knots: usize) -> SparseGrid<usize> {
         assert!(knots > 1);
 
+        let is_tail = |knot: usize| -> bool { knot == knots - 2 };
+
         let mut rope = Vec::with_capacity(knots);
         rope.resize_with(knots, Point::default);
 
@@ -51,10 +50,10 @@ impl Day9 {
                     let head = rope.get(follower).unwrap();
                     let pred = rope.get(follower + 1).unwrap();
                     if head.distance(pred) > 1 {
-                        let motion = pred.follow(head);
-                        *rope.get_mut(follower + 1).unwrap() = motion;
-                        if follower == knots - 2 {
-                            trace += motion;
+                        let destination = pred.follow(head);
+                        *rope.get_mut(follower + 1).unwrap() = destination;
+                        if is_tail(follower) {
+                            trace += destination;
                         }
                     }
                 });
