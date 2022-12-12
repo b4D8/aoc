@@ -134,15 +134,13 @@ impl std::fmt::Display for CathodeRayTube {
             self.0
                 .chunks_exact(COLS)
                 .into_iter()
-                .map(|row| {
-                    format!(
+                .fold(String::new(), |acc, row| {
+                    acc + &format!(
                         "{}\n",
                         row.iter()
-                            .map(|col| format!("{:?}", col))
-                            .collect::<String>()
+                            .fold(String::new(), |acc, col| acc + &format!("{:?}", col))
                     )
                 })
-                .collect::<String>()
         )
     }
 }
