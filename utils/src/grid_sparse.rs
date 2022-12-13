@@ -1,5 +1,5 @@
 use {
-    super::*,
+    super::Point,
     std::{
         collections::{btree_map::Entry, BTreeMap},
         usize,

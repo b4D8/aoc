@@ -39,10 +39,10 @@ Monkey 3:
 Each monkey has several attributes:
 
 * Starting items lists your worry level for each item the monkey is currently holding in the order they will be inspected.
-  Operation shows how your worry level changes as that monkey inspects an item. (An operation like new = old * 5 means that your worry level after the monkey inspected the item is five times whatever your worry level was before inspection.)
-    Test shows how the monkey uses your worry level to decide where to throw an item next.
-        If true shows what happens with an item if the Test was true.
-        If false shows what happens with an item if the Test was false.
+* Operation shows how your worry level changes as that monkey inspects an item. (An operation like new = old * 5 means that your worry level after the monkey inspected the item is five times whatever your worry level was before inspection.)
+* Test shows how the monkey uses your worry level to decide where to throw an item next.
+  * If true shows what happens with an item if the Test was true.
+  * If false shows what happens with an item if the Test was false.
 
 After each monkey inspects an item but before it tests your worry level, your relief that the monkey's inspection didn't damage the item causes your worry level to be divided by three and rounded down to the nearest integer.
 
@@ -223,7 +223,7 @@ Monkey 2 inspected items 7 times.
 Monkey 3 inspected items 105 times.
 ```
 
-In this example, the two most active monkeys inspected items 101 and 105 times. The level of **monkey business** in this situation can be found by multiplying these together: **10605**.
+In this example, the two most active monkeys inspected items 101 and 105 times. The level of **monkey business** in this situation can be found by multiplying these together: **10_605**.
 
 Figure out which monkeys to chase by counting how many items they inspect over 20 rounds. **What is the level of monkey business after 20 rounds of stuff-slinging simian shenanigans?**
 
@@ -233,7 +233,7 @@ You're worried you might not ever get your items back. So worried, in fact, that
 
 Unfortunately, that relief was all that was keeping your worry levels from reaching **ridiculous levels**. You'll need to **find another way to keep your worry levels manageable**.
 
-At this rate, you might be putting up with these monkeys for a **very long time** - possibly **10000 rounds**!
+At this rate, you might be putting up with these monkeys for a **very long time** - possibly **10_000 rounds**!
 
 With these new rules, you can still figure out the monkey business after 10000 rounds. Using the same example above:
 
@@ -305,12 +305,12 @@ Monkey 2 inspected items 1746 times.
 Monkey 3 inspected items 46807 times.
 
 == After round 10000 ==
-**Monkey 0 inspected items 52166 times.**
+Monkey 0 inspected items 52166 times.
 Monkey 1 inspected items 47830 times.
 Monkey 2 inspected items 1938 times.
-**Monkey 3 inspected items 52013 times.**
+Monkey 3 inspected items 52013 times.
 ```
 
-After 10000 rounds, the two most active monkeys inspected items 52166 and 52013 times. Multiplying these together, the level of **monkey business** in this situation is now **2713310158**.
+After 10_000 rounds, the two most active monkeys inspected items 52166 and 52013 times. Multiplying these together, the level of **monkey business** in this situation is now **2_713_310_158**.
 
 Worry levels are no longer divided by three after each item is inspected; you'll need to find another way to keep your worry levels manageable. Starting again from the initial state in your puzzle input, **what is the level of monkey business after 10000 rounds?**

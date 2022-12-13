@@ -19,3 +19,4 @@ Collect stars by solving puzzles. Two puzzles will be made available on each day
 | [Day 9:  Rope Bridge](./09/README.md)            | [rust](./09/rust/src/main.rs)                        |
 | [Day 10: Cathode-Ray Tube](./10/README.md)       | [rust](./10/rust/src/main.rs)                        |
 | [Day 11: Monkey in the Middle](./11/README.md)   | [rust](./11/rust/src/main.rs)                        |
+| [Day 12: Hill Climbing Algorithm](./12/README.md)| [rust](./12/rust/src/main.rs)                        |

@@ -6,15 +6,7 @@ pub struct Grid<T> {
     values: Vec<T>,
 }
 
-impl<T: Default + Clone> Grid<T> {
-    pub fn cols(&self) -> usize {
-        self.max.0 as usize + 1
-    }
-
-    pub fn rows(&self) -> usize {
-        self.max.1 as usize + 1
-    }
-
+impl<T> Grid<T> {
     pub fn min(&self) -> Point {
         Point::default()
     }
@@ -23,34 +15,42 @@ impl<T: Default + Clone> Grid<T> {
         self.max
     }
 
+    pub fn cols(&self) -> usize {
+        self.max.0 as usize + 1
+    }
+
+    pub fn rows(&self) -> usize {
+        self.max.1 as usize + 1
+    }
+
     pub fn len(&self) -> usize {
         self.values.len()
+    }
+
+    pub fn index(&self, Point(col, row): Point) -> usize {
+        col as usize + row as usize * self.cols()
+    }
+
+    pub fn contains(&self, Point(col, row): &Point) -> bool {
+        (*row as usize) < self.rows() && (*col as usize) < self.cols()
+    }
+
+    pub fn get(&self, Point(col, row): Point) -> Option<&T> {
+        self.contains(&Point(col, row))
+            .then(|| &self.values[self.index(Point(col, row))])
+    }
+
+    pub fn get_mut(&mut self, Point(col, row): Point) -> Option<&mut T> {
+        self.contains(&Point(col, row)).then(|| {
+            let index = self.index(Point(col, row));
+            &mut self.values[index]
+        })
     }
 
     pub fn is_outer(&self, Point(col, row): Point) -> bool {
         let Point(max_col, max_row) = self.max;
         row == 0 || col == 0 || col == max_col || row == max_row
     }
-
-    pub fn new(cols: usize, rows: usize) -> Self {
-        Self {
-            max: Point(cols as isize - 1, rows as isize - 1),
-            values: vec![T::default(); rows * cols],
-        }
-    }
-
-    pub fn get(&self, Point(col, row): Point) -> Option<&T> {
-        let cols = self.cols();
-        ((row as usize) < self.rows() && (col as usize) < cols)
-            .then(|| &self.values[col as usize + row as usize * cols])
-    }
-
-    pub fn get_mut(&mut self, Point(col, row): Point) -> Option<&mut T> {
-        let cols = self.cols();
-        ((row as usize) < self.rows() && (col as usize) < cols)
-            .then(|| &mut self.values[col as usize + row as usize * cols])
-    }
-
     pub fn get_row(&self, row: usize) -> Option<Vec<&T>> {
         println!("{} vs {}", row, self.rows());
         (row < self.rows()).then(|| {
@@ -68,18 +68,6 @@ impl<T: Default + Clone> Grid<T> {
         })
     }
 
-    pub fn transpose(&self) -> Self {
-        Self {
-            max: self.max,
-            values: Vec::from_iter((0..self.rows()).flat_map(move |row| {
-                self.get_row(row)
-                    .unwrap()
-                    .into_iter()
-                    .map(|value| value.clone())
-            })),
-        }
-    }
-
     pub fn apply<F: FnMut(&T)>(&self, fun: F) {
         self.values.iter().for_each(fun);
     }
@@ -89,9 +77,9 @@ impl<T: Default + Clone> Grid<T> {
     }
 
     pub fn insert(&mut self, Point(row, col): Point, value: T) {
-        self.get_mut(Point(row, col)).map(|cell| {
+        if let Some(cell) = self.get_mut(Point(row, col)) {
             *cell = value;
-        });
+        }
     }
 
     pub fn insert_at(&mut self, index: usize, value: T) {
@@ -99,13 +87,44 @@ impl<T: Default + Clone> Grid<T> {
     }
 }
 
-impl<T: Default + Clone + PartialEq> Grid<T> {
-    pub fn empty(&self) -> usize {
-        self.values.iter().filter(|v| **v == T::default()).count()
+impl<T: Clone> Grid<T> {
+    pub fn transpose(&self) -> Self {
+        Self {
+            max: self.max,
+            values: Vec::from_iter(
+                (0..self.rows())
+                    .flat_map(move |row| self.get_row(row).unwrap().into_iter().cloned())
+                    .collect::<Vec<_>>(),
+            ),
+        }
     }
 
-    pub fn full(&self) -> usize {
-        self.values.iter().filter(|v| **v != T::default()).count()
+    pub fn points(&self) -> Vec<Point> {
+        (self.min().1..=self.max().1)
+            .flat_map(move |y| {
+                (self.min().0..=self.max().0)
+                    .into_iter()
+                    .map(|x| Point(x, y))
+                    .collect::<Vec<Point>>()
+            })
+            .collect()
+    }
+
+    pub fn values(&self) -> Vec<T> {
+        self.values.clone()
+    }
+
+    pub fn points_values(&self) -> Vec<(Point, T)> {
+        self.points().into_iter().zip(self.values.clone()).collect()
+    }
+}
+
+impl<T: Default + Clone> Grid<T> {
+    pub fn new(cols: usize, rows: usize) -> Self {
+        Self {
+            max: Point(cols as isize - 1, rows as isize - 1),
+            values: vec![T::default(); rows * cols],
+        }
     }
 }
 
@@ -120,9 +139,25 @@ impl<T: Default + Clone> From<SparseGrid<T>> for Grid<T> {
     }
 }
 
-impl From<(usize, usize)> for Point {
-    fn from(s: (usize, usize)) -> Self {
-        Self(s.0 as isize, s.1 as isize)
+impl<T: Default + Clone + PartialEq> Grid<T> {
+    pub fn empty(&self) -> usize {
+        self.values.iter().filter(|v| **v == T::default()).count()
+    }
+
+    pub fn full(&self) -> usize {
+        self.values.iter().filter(|v| **v != T::default()).count()
+    }
+}
+
+impl<T> From<Vec<Vec<T>>> for Grid<T> {
+    fn from(grid: Vec<Vec<T>>) -> Self {
+        let rows = grid.len();
+        let cols = grid.get(0).unwrap().len();
+        let values = grid.into_iter().flatten().collect();
+        Self {
+            max: Point(cols as isize - 1, rows as isize - 1),
+            values,
+        }
     }
 }
 

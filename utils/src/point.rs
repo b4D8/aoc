@@ -75,10 +75,7 @@ impl Point {
         [before, after]
             .concat()
             .iter()
-            .map(|direction| {
-                dbg!(direction);
-                self.orth_neighbour(*direction)
-            })
+            .map(|direction| self.orth_neighbour(*direction))
             .collect()
     }
 
@@ -117,5 +114,11 @@ impl std::ops::SubAssign for Point {
     fn sub_assign(&mut self, rhs: Point) {
         self.0.sub_assign(rhs.0);
         self.1.sub_assign(rhs.1);
+    }
+}
+
+impl From<(usize, usize)> for Point {
+    fn from(s: (usize, usize)) -> Self {
+        Self(s.0 as isize, s.1 as isize)
     }
 }
